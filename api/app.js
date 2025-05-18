@@ -42,86 +42,26 @@ app.get('/api', (req, res) => {
   res.json({ message: 'Bienvenido a la API' });
 });
 
-// Registro de usuario
-app.post("/api/register", async (req, res) => {
+app.post('/api/registrar', async (req, res) => {
   try {
-    console.log(req.body);
-    const { email, password } = req.body;
+    const { usuario, email, contra, fechaNacimiento } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: "Todos los campos son obligatorios." });
+    // Validaciones básicas (puedes ampliar según necesidades)
+    if (!usuario || !email || !contra || !fechaNacimiento) {
+      return res.status(400).json({ message: 'Faltan campos obligatorios.' });
     }
 
-    const existingUser = await collection.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ success: false, message: "Este correo ya está registrado." });
-    }
+    // Insertar en la colección "usuarios"
+    const nuevoUsuario = { usuario, email, contra, fechaNacimiento };
+    const resultado = await collection.insertOne(nuevoUsuario);
 
-    await collection.insertOne({ email, password });
-
-    res.status(201).json({ success: true, message: "Usuario registrado correctamente." });
+    res.status(201).json({ message: 'Usuario creado', id: resultado.insertedId });
   } catch (error) {
-    console.error("Error en el registro:", error);
-    res.status(500).json({ success: false, message: "Error en el servidor." });
+    console.error('Error al registrar usuario:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 });
-app.post("/api/login", async (req, res) => {
-  try {
-      console.log("Datos recibidos en /api/login:", req.body);
-      const { email, password } = req.body;
 
-      if (!email || !password) {
-          return res.status(400).json({ success: false, message: "Todos los campos son obligatorios." });
-      }
-
-      const user = await collection.findOne({ email, password });
-
-      if (!user) {
-          return res.status(401).json({ success: false, message: "Correo o contraseña incorrectos." });
-      }
-
-      res.status(200).json({ success: true, message: "Inicio de sesión exitoso." });
-  } catch (error) {
-      console.error("🔥 Error en el login:", error);
-      res.status(500).json({ success: false, message: "Error en el servidor." });
-  }
-});
-// Endpoint para crear una reserva
-app.post("/api/reservas", async (req, res) => {
-  try {
-      const { nombre, telefono, comensales, fecha, hora } = req.body;
-
-      if (!nombre || !telefono || !comensales || !fecha || !hora) {
-          return res.status(400).json({ success: false, message: "Todos los campos son obligatorios." });
-      }
-
-      // Convertir la fecha a tipo Date para ordenamiento futuro
-      const fechaReserva = new Date(fecha);
-
-      // Insertar en la colección "reservas"
-      await client.db("restaurante").collection("reservas").insertOne({
-          nombre,
-          telefono,
-          comensales: parseInt(comensales),
-          fecha: fechaReserva,
-          hora
-      });
-
-      res.status(201).json({ success: true, message: "Reserva creada exitosamente." });
-  } catch (error) {
-      console.error("Error al crear la reserva:", error);
-      res.status(500).json({ success: false, message: "Error en el servidor." });
-  }
-});
-app.get("/api/reservas", async (req, res) => {
-  try {
-    const reservas = await client.db("restaurante").collection("reservas").find().toArray();
-    res.status(200).json({ success: true, reservas });
-  } catch (error) {
-    console.error("Error al obtener reservas:", error);
-    res.status(500).json({ success: false, message: "Error al obtener las reservas." });
-  }
-});
 module.exports = app;
 
 /*
