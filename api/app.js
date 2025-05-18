@@ -51,7 +51,6 @@ app.post('/api/registrar', async (req, res) => {
       return res.status(400).json({ message: 'Faltan campos obligatorios.' });
     }
 
-    // Insertar en la colección "usuarios"
     const nuevoUsuario = { usuario, email, contra, fechaNacimiento };
     const resultado = await collection.insertOne(nuevoUsuario);
 
