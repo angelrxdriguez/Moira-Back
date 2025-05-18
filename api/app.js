@@ -17,13 +17,14 @@ let collection;
 async function connectToDB() {
   try {
     await client.connect();
-    const database = client.db('moira');
-    collection = database.collection('usuarios');
+    const database = client.db('moira'); 
+    collection = database.collection('usuarios'); 
     console.log("Conectado a MongoDB");
   } catch (err) {
     console.error("Error al conectar a MongoDB:", err);
   }
 }
+
 connectToDB();
 
 app.get('/api/check-db', async (req, res) => {
