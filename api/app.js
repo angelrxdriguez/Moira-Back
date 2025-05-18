@@ -17,7 +17,7 @@ let collection;
 async function connectToDB() {
   try {
     await client.connect();
-    const database = client.db('restaurante');
+    const database = client.db('moira');
     collection = database.collection('usuarios');
     console.log("Conectado a MongoDB");
   } catch (err) {
