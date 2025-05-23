@@ -2,10 +2,12 @@ const express = require('express');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const cors = require('cors'); 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
-const uri= "mongodb+srv://angelrp:abc123.@cluster0.76po7.mongodb.net/moira?retryWrites=true&w=majority&appName=Cluster0";
-//const uri = process.env.MONGODB_URI;
+
+const uri = "mongodb+srv://angelrp:abc123.@cluster0.76po7.mongodb.net/moira?retryWrites=true&w=majority&appName=Cluster0";
+
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -13,12 +15,16 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
-let collection;
+
+let usuariosCollection;
+let tiposOfertasCollection;
+
 async function connectToDB() {
   try {
     await client.connect();
-    const database = client.db('moira'); 
-    collection = database.collection('usuarios'); 
+    const database = client.db('moira');
+    usuariosCollection = database.collection('usuarios');
+    tiposOfertasCollection = database.collection('tiposOfertas');
     console.log("Conectado a MongoDB");
   } catch (err) {
     console.error("Error al conectar a MongoDB:", err);
@@ -27,12 +33,20 @@ async function connectToDB() {
 
 connectToDB();
 
+app.get('/api/tiposOfertas', async (req, res) => {
+  try {
+    const tipos = await tiposOfertasCollection.find({}).toArray();
+    res.json(tipos);
+  } catch (error) {
+    console.error('Error al obtener tipos de ofertas:', error);
+    res.status(500).json({ message: 'Error al obtener tipos de ofertas' });
+  }
+});
+
+// Ruta de prueba
 app.get('/api/check-db', async (req, res) => {
   try {
-    if (!client.topology || !client.topology.isConnected()) {
-      await client.connect();
-    }
-    const test = await collection.findOne();
+    const test = await usuariosCollection.findOne();
     res.json({ message: 'Te conecta a mongo', test });
   } catch (error) {
     res.status(500).json({ message: 'Error al conectar con Mongo', error });
@@ -47,13 +61,12 @@ app.post('/api/registrar', async (req, res) => {
   try {
     const { usuario, email, contra, fechaNacimiento } = req.body;
 
-    // Validaciones básicas (puedes ampliar según necesidades)
     if (!usuario || !email || !contra || !fechaNacimiento) {
       return res.status(400).json({ message: 'Faltan campos obligatorios.' });
     }
 
     const nuevoUsuario = { usuario, email, contra, fechaNacimiento };
-    const resultado = await collection.insertOne(nuevoUsuario);
+    const resultado = await usuariosCollection.insertOne(nuevoUsuario);
 
     res.status(201).json({ message: 'Usuario creado', id: resultado.insertedId });
   } catch (error) {
@@ -63,6 +76,7 @@ app.post('/api/registrar', async (req, res) => {
 });
 
 module.exports = app;
+
 
 /*
 // Configurar CORS (uso del middleware CORS)
