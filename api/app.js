@@ -76,7 +76,7 @@ app.post('/api/registrar', async (req, res) => {
     res.status(500).json({ message: 'Error interno del servidor' });
   }
 });
-app.get("/ubicaciones/comunidades", async (req, res) => {
+app.get("/api/ubicaciones/comunidades", async (req, res) => {
   const doc = await ubicacionesCollection.findOne({});
   if (!doc) return res.status(404).send([]);
   const comunidades = Object.keys(doc).filter(k => k !== "_id");
@@ -84,7 +84,7 @@ app.get("/ubicaciones/comunidades", async (req, res) => {
 });
 
 // Ruta para obtener provincias de una comunidad
-app.get("/ubicaciones/provincias/:comunidad", async (req, res) => {
+app.get("/api/ubicaciones/provincias/:comunidad", async (req, res) => {
   const comunidad = req.params.comunidad;
   const doc = await ubicacionesCollection.findOne({});
   if (!doc || !doc[comunidad]) return res.status(404).send([]);
@@ -93,7 +93,7 @@ app.get("/ubicaciones/provincias/:comunidad", async (req, res) => {
 });
 
 // Ruta para obtener ciudades de una provincia
-app.get("/ubicaciones/ciudades/:comunidad/:provincia", async (req, res) => {
+app.get("/api/ubicaciones/ciudades/:comunidad/:provincia", async (req, res) => {
   const { comunidad, provincia } = req.params;
   const doc = await ubicacionesCollection.findOne({});
   if (!doc || !doc[comunidad] || !doc[comunidad][provincia]) return res.status(404).send([]);
