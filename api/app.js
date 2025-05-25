@@ -1,6 +1,6 @@
 const express = require('express');
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const cors = require('cors'); 
+const cors = require('cors');
 const app = express();
 
 app.use(cors());
@@ -18,13 +18,14 @@ const client = new MongoClient(uri, {
 
 let usuariosCollection;
 let tiposOfertasCollection;
-
+let ubicacionesCollection;
 async function connectToDB() {
   try {
     await client.connect();
     const database = client.db('moira');
     usuariosCollection = database.collection('usuarios');
     tiposOfertasCollection = database.collection('tiposOfertas');
+    ubicacionesCollection = db.collection("ubicaciones");
     console.log("Conectado a MongoDB");
   } catch (err) {
     console.error("Error al conectar a MongoDB:", err);
@@ -74,7 +75,29 @@ app.post('/api/registrar', async (req, res) => {
     res.status(500).json({ message: 'Error interno del servidor' });
   }
 });
+app.get("/ubicaciones/comunidades", async (req, res) => {
+  const doc = await ubicacionesCollection.findOne({});
+  if (!doc) return res.status(404).send([]);
+  const comunidades = Object.keys(doc).filter(k => k !== "_id");
+  res.json(comunidades);
+});
 
+// Ruta para obtener provincias de una comunidad
+app.get("/ubicaciones/provincias/:comunidad", async (req, res) => {
+  const comunidad = req.params.comunidad;
+  const doc = await ubicacionesCollection.findOne({});
+  if (!doc || !doc[comunidad]) return res.status(404).send([]);
+  const provincias = Object.keys(doc[comunidad]);
+  res.json(provincias);
+});
+
+// Ruta para obtener ciudades de una provincia
+app.get("/ubicaciones/ciudades/:comunidad/:provincia", async (req, res) => {
+  const { comunidad, provincia } = req.params;
+  const doc = await ubicacionesCollection.findOne({});
+  if (!doc || !doc[comunidad] || !doc[comunidad][provincia]) return res.status(404).send([]);
+  res.json(doc[comunidad][provincia]);
+});
 module.exports = app;
 
 
