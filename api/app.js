@@ -25,7 +25,8 @@ async function connectToDB() {
     const database = client.db('moira');
     usuariosCollection = database.collection('usuarios');
     tiposOfertasCollection = database.collection('tiposOfertas');
-    ubicacionesCollection = db.collection("ubicaciones");
+    ubicacionesCollection = database.collection("ubicaciones");
+
     console.log("Conectado a MongoDB");
   } catch (err) {
     console.error("Error al conectar a MongoDB:", err);
