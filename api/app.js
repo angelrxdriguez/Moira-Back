@@ -1,14 +1,13 @@
 // app.js
 const express = require('express');
 const cors = require('cors');
-const connectToDB = require('./db'); // archivo de conexión separado
+const connectToDB = require('./db'); // archivo de cone
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-/* === ENDPOINTS === */
-
+/*ENDPOINTS*/
 // Tipos de ofertas
 app.get('/api/tiposOfertas', async (req, res) => {
   try {
@@ -89,6 +88,35 @@ app.get("/api/ubicaciones/ciudades/:comunidad/:provincia", async (req, res) => {
   const doc = await ubicacionesCollection.findOne({});
   if (!doc || !doc[comunidad] || !doc[comunidad][provincia]) return res.status(404).send([]);
   res.json(doc[comunidad][provincia]);
+});
+//LOGIN
+app.post('/api/login', async (req, res) => {
+  const { email, contra } = req.body;
+
+  if (!email || !contra) {
+    return res.status(400).json({ message: 'Faltan datos de inicio de sesión.' });
+  }
+
+  try {
+    const usuario = await usuariosCollection.findOne({ email });
+
+    if (!usuario || usuario.contra !== contra) {
+      return res.status(401).json({ message: 'Credenciales incorrectas.' });
+    }
+
+    // Simulamos "sesión" enviando los datos del usuario
+    res.status(200).json({
+      message: 'Login exitoso',
+      usuario: {
+        id: usuario._id,
+        nombre: usuario.usuario,
+        email: usuario.email
+      }
+    });
+  } catch (err) {
+    console.error("Error en login:", err);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
 });
 
 module.exports = app;

@@ -25,7 +25,7 @@ async function connectToDB() {
   cachedClient = client;
   cachedDb = db;
 
-  console.log("✅ Conectado a MongoDB");
+  console.log("Conectado a MongoDB");
 
   return { client, db };
 }
