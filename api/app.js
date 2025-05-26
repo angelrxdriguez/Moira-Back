@@ -1,42 +1,19 @@
+// app.js
 const express = require('express');
-const { MongoClient, ServerApiVersion } = require('mongodb');
 const cors = require('cors');
-const app = express();
+const connectToDB = require('./db'); // archivo de conexión separado
 
+const app = express();
 app.use(cors());
 app.use(express.json());
 
-const uri = "mongodb+srv://angelrp:abc123.@cluster0.76po7.mongodb.net/moira?retryWrites=true&w=majority&appName=Cluster0";
+/* === ENDPOINTS === */
 
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
-});
-
-let usuariosCollection;
-let tiposOfertasCollection;
-let ubicacionesCollection;
-async function connectToDB() {
-  try {
-    await client.connect();
-    const database = client.db('moira');
-    usuariosCollection = database.collection('usuarios');
-    tiposOfertasCollection = database.collection('tiposOfertas');
-    ubicacionesCollection = database.collection("ubicaciones");
-
-    console.log("Conectado a MongoDB");
-  } catch (err) {
-    console.error("Error al conectar a MongoDB:", err);
-  }
-}
-
-connectToDB();
-
+// Tipos de ofertas
 app.get('/api/tiposOfertas', async (req, res) => {
   try {
+    const { db } = await connectToDB();
+    const tiposOfertasCollection = db.collection('tiposOfertas');
     const tipos = await tiposOfertasCollection.find({}).toArray();
     res.json(tipos);
   } catch (error) {
@@ -48,6 +25,8 @@ app.get('/api/tiposOfertas', async (req, res) => {
 // Ruta de prueba
 app.get('/api/check-db', async (req, res) => {
   try {
+    const { db } = await connectToDB();
+    const usuariosCollection = db.collection('usuarios');
     const test = await usuariosCollection.findOne();
     res.json({ message: 'Te conecta a mongo', test });
   } catch (error) {
@@ -55,19 +34,23 @@ app.get('/api/check-db', async (req, res) => {
   }
 });
 
+// Ruta base
 app.get('/api', (req, res) => {
   res.json({ message: 'Bienvenido a la API' });
 });
 
+// Registro de usuarios
 app.post('/api/registrar', async (req, res) => {
   try {
     const { usuario, email, contra, fechaNacimiento } = req.body;
-
     if (!usuario || !email || !contra || !fechaNacimiento) {
       return res.status(400).json({ message: 'Faltan campos obligatorios.' });
     }
 
     const nuevoUsuario = { usuario, email, contra, fechaNacimiento };
+
+    const { db } = await connectToDB();
+    const usuariosCollection = db.collection('usuarios');
     const resultado = await usuariosCollection.insertOne(nuevoUsuario);
 
     res.status(201).json({ message: 'Usuario creado', id: resultado.insertedId });
@@ -76,30 +59,40 @@ app.post('/api/registrar', async (req, res) => {
     res.status(500).json({ message: 'Error interno del servidor' });
   }
 });
+
+// Comunidades
 app.get("/api/ubicaciones/comunidades", async (req, res) => {
+  const { db } = await connectToDB();
+  const ubicacionesCollection = db.collection('ubicaciones');
   const doc = await ubicacionesCollection.findOne({});
   if (!doc) return res.status(404).send([]);
   const comunidades = Object.keys(doc).filter(k => k !== "_id");
   res.json(comunidades);
 });
 
-// Ruta para obtener provincias de una comunidad
+// Provincias
 app.get("/api/ubicaciones/provincias/:comunidad", async (req, res) => {
-  const comunidad = req.params.comunidad;
+  const { comunidad } = req.params;
+  const { db } = await connectToDB();
+  const ubicacionesCollection = db.collection('ubicaciones');
   const doc = await ubicacionesCollection.findOne({});
   if (!doc || !doc[comunidad]) return res.status(404).send([]);
   const provincias = Object.keys(doc[comunidad]);
   res.json(provincias);
 });
 
-// Ruta para obtener ciudades de una provincia
+// Ciudades
 app.get("/api/ubicaciones/ciudades/:comunidad/:provincia", async (req, res) => {
   const { comunidad, provincia } = req.params;
+  const { db } = await connectToDB();
+  const ubicacionesCollection = db.collection('ubicaciones');
   const doc = await ubicacionesCollection.findOne({});
   if (!doc || !doc[comunidad] || !doc[comunidad][provincia]) return res.status(404).send([]);
   res.json(doc[comunidad][provincia]);
 });
+
 module.exports = app;
+
 
 
 /*
