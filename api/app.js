@@ -98,13 +98,14 @@ app.post('/api/login', async (req, res) => {
   }
 
   try {
+    const { db } = await connectToDB();
+    const usuariosCollection = db.collection('usuarios');
     const usuario = await usuariosCollection.findOne({ email });
 
     if (!usuario || usuario.contra !== contra) {
       return res.status(401).json({ message: 'Credenciales incorrectas.' });
     }
 
-    // Simulamos "sesión" enviando los datos del usuario
     res.status(200).json({
       message: 'Login exitoso',
       usuario: {
@@ -118,6 +119,7 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ message: 'Error interno del servidor' });
   }
 });
+
 
 module.exports = app;
 
